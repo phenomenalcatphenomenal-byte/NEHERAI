@@ -1915,8 +1915,7 @@
             const getSiteContext = () => {
                 let text = document.body.innerText || "";
                 // Remove excessive newlines and limit size to avoid overwhelming the AI
-                return text.replace(/
-+/g, ' ').substring(0, 6000);
+                return text.replace(/\n+/g, ' ').substring(0, 6000);
             };
 
             let conversationHistory = [
