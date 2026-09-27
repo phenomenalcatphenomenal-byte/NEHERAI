@@ -3,29 +3,45 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) {
+        console.error('GROQ_API_KEY is not configured');
+        return res.status(500).json({ 
+            error: 'Server configuration error: GROQ_API_KEY is missing from Vercel Environment Variables.' 
+        });
+    }
+
     try {
         const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
+                'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
                 messages: req.body.messages,
-                model: 'llama-3.1-8b-instant',
+                model: 'qwen/qwen3.8-27b',
                 temperature: 0.7,
-                max_tokens: 1000
+                max_tokens: 800
             })
         });
 
+        const data = await groqRes.json();
+
         if (!groqRes.ok) {
-            throw new Error(`Groq API error: ${groqRes.statusText}`);
+            console.error('Groq API Error Response:', data);
+            return res.status(groqRes.status).json({ 
+                error: data?.error?.message || 'Error communicating with Groq API',
+                details: data
+            });
         }
 
-        const data = await groqRes.json();
         res.status(200).json(data);
     } catch (error) {
-        console.error('Error fetching Groq:', error);
-        res.status(500).json({ error: 'Failed to generate response' });
+        console.error('Internal Handler Error:', error);
+        res.status(500).json({ 
+            error: error.message || 'Internal Server Error' 
+        });
     }
 }
+
