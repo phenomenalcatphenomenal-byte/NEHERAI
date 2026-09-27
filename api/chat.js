@@ -3,11 +3,30 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    const apiKey = process.env.GROQ_API_KEY;
+    let apiKey = process.env.GROQ_API_KEY 
+        || process.env.GROK_API_KEY 
+        || process.env.groq_api_key 
+        || process.env.grok_api_key 
+        || process.env.GROQ_KEY 
+        || process.env.GROK_KEY
+        || process.env.API_KEY;
+
     if (!apiKey) {
-        console.error('GROQ_API_KEY is not configured');
+        // Automatically check if any environment variable value starts with 'gsk_'
+        for (const [key, val] of Object.entries(process.env)) {
+            if (typeof val === 'string' && val.trim().startsWith('gsk_')) {
+                apiKey = val.trim();
+                break;
+            }
+        }
+    }
+
+    if (!apiKey) {
+        const availableKeys = Object.keys(process.env).filter(k => !k.startsWith('VERCEL') && !k.startsWith('AWS') && !k.startsWith('NODE'));
+        console.error('GROQ_API_KEY is not configured. Available custom keys:', availableKeys);
         return res.status(500).json({ 
-            error: 'Server configuration error: GROQ_API_KEY is missing from Vercel Environment Variables.' 
+            error: 'Server configuration error: GROQ_API_KEY (or GROK_API_KEY) is missing from Vercel Environment Variables.',
+            custom_env_keys_found: availableKeys
         });
     }
 
