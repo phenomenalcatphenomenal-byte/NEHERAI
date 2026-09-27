@@ -1599,8 +1599,20 @@
             fab.addEventListener('click', toggleWidget);
             closeBtn.addEventListener('click', toggleWidget);
 
-                        let conversationHistory = [
-                { role: 'system', content: `You are Nehorai, an AI assistant for the NEHORAI ecosystem. Provide concise, helpful, and friendly responses. Use emojis when appropriate. Your name is Nehorai. The current date and time is ${new Date().toLocaleString()}.` }
+                                    // Extract text from the website to give the AI context
+            const getSiteContext = () => {
+                let text = document.body.innerText || "";
+                // Remove excessive newlines and limit size to avoid overwhelming the AI
+                return text.replace(/
++/g, ' ').substring(0, 6000);
+            };
+
+            let conversationHistory = [
+                { role: 'system', content: `You are Nehorai, an AI assistant for this website and the NEHORAI ecosystem. Provide concise, helpful, and friendly responses. Use emojis when appropriate. Your name is Nehorai. The current date and time is ${new Date().toLocaleString()}. 
+
+IMPORTANT: Here is the text content of the website you are currently on. Read this carefully to answer any questions the user asks about the website's features, sections, or details:
+
+${getSiteContext()}` }
             ];
 
             const addMessage = (text, sender) => {
